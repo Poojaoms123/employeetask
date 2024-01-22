@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StudentRepository extends JpaRepository<Student,Long> {
@@ -45,4 +46,15 @@ public interface StudentRepository extends JpaRepository<Student,Long> {
     Page<Student> getAllByStudentMobileNo(String studentMobileNo, Pageable pageable);
 
     Page<Student> findAllByStudentName(String studentName, Pageable pageable);
+
+    @Query(value = "select * from demo11_Student where student_created_at between :startDateTime and :endDateTime and student_is_deleted=false order by student_created_at desc ",nativeQuery = true)
+    Page<Student> getByAllDateFilter(LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable);
+
+    boolean existsByStudentEmail(String studentEmail);
+
+    boolean existsByStudentMobileNo(String studentMobileNo);
+
+    boolean existsByStudentEmailAndStudentIdNotIn(String studentEmail, List<Long> ids);
+
+    boolean existsByStudentMobileNoAndStudentIdNotIn(String studentMobileNo, List<Long> ids);
 }

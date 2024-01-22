@@ -11,6 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class StudentServiceImpl implements StudentService {
     @Autowired
@@ -18,12 +24,21 @@ public class StudentServiceImpl implements StudentService {
 
 
     @Override
-    public String saveOrUpdateStudent(SaveStudentRequest saveStudentRequest) {
+    public String saveOrUpdateStudent(SaveStudentRequest saveStudentRequest) throws Exception {
         if (studentRepository.existsById(saveStudentRequest.getStudentId())) {
+            List<Long> ids = new ArrayList<>();
+            ids.add(saveStudentRequest.getStudentId());
             Student student = studentRepository.findById(saveStudentRequest.getStudentId()).get();
             student.setStudentName(saveStudentRequest.getStudentName());
-            student.setStudentEmail(saveStudentRequest.getStudentEmail());
-            student.setStudentMobileNo(saveStudentRequest.getStudentMobileNo());
+            if (studentRepository.existsByStudentEmailAndStudentIdNotIn(saveStudentRequest.getStudentEmail(),ids)){
+                throw new Exception("Email already exits");
+            }else {
+                student.setStudentEmail(saveStudentRequest.getStudentEmail());}
+            if (studentRepository.existsByStudentMobileNoAndStudentIdNotIn(saveStudentRequest.getStudentMobileNo(),ids)){
+                throw new Exception("MobileNo already exists");
+            }else {
+                student.setStudentMobileNo(saveStudentRequest.getStudentMobileNo());
+            }
             student.setStudentIsDeleted(false);
             student.setStudentIsavtive(true);
             studentRepository.save(student);
@@ -31,8 +46,16 @@ public class StudentServiceImpl implements StudentService {
         } else {
             Student student = new Student();
             student.setStudentName(saveStudentRequest.getStudentName());
+            if (studentRepository.existsByStudentEmail(saveStudentRequest.getStudentEmail())) {
+                throw new Exception("Email already exists");
+            }else {
             student.setStudentEmail((saveStudentRequest.getStudentEmail()));
-            student.setStudentMobileNo(saveStudentRequest.getStudentMobileNo());
+            }
+            if (studentRepository.existsByStudentMobileNo(saveStudentRequest.getStudentMobileNo())){
+                throw new Exception("Mobile No alredy exists");
+            }else {
+                student.setStudentMobileNo(saveStudentRequest.getStudentMobileNo());
+            }
             student.setStudentIsDeleted(false);
             student.setStudentIsavtive(true);
             studentRepository.save(student);
@@ -81,6 +104,24 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public Object getAllByDeleted(String startDate, String endDate, Pageable pageable) {
+        Page<Student> students;
+        if (StringUtils.isNotBlank(startDate) && StringUtils.isNotBlank(endDate)) {
+            LocalDate startDate1 = LocalDate.parse(startDate);
+            LocalDate endDate1 = LocalDate.parse(endDate);
+
+            LocalDateTime startDateTime = LocalDateTime.of(startDate1, LocalTime.of(0, 0));
+            LocalDateTime endDateTime = LocalDateTime.of(endDate1, LocalTime.of(23, 59));
+            students = studentRepository.getByAllDateFilter(startDateTime, endDateTime, pageable);
+
+        } else {
+            students = studentRepository.getAllByDeleted(pageable);
+        }
+        return new pageDTO(students.getContent(), students.getTotalElements(), students.getNumber(), students.getTotalPages());
+    }
+
+/*
+    @Override
     public Object getAllByDeleted(String studentName, Pageable pageable) {
         Page<Student> students;
         if (studentName != null && !studentName.isEmpty()) {
@@ -128,5 +169,5 @@ public class StudentServiceImpl implements StudentService {
             students = studentRepository.getAllByDeleted(pageable);
         }
         return new pageDTO(students.getContent(), students.getTotalElements(), students.getNumber(), students.getTotalPages());
-    }
+    }*/
 }

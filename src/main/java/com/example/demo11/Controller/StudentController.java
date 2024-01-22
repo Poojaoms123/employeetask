@@ -22,7 +22,7 @@ public class StudentController {
     public String firstapi(){return "Working";}
 
     @PostMapping("/saveOrUpdateStudent")
-    public ResponseEntity<?> saveOrUpdateStudent(@RequestBody SaveStudentRequest saveStudentRequest){
+    public ResponseEntity<?> saveOrUpdateStudent(@RequestBody SaveStudentRequest saveStudentRequest) throws Exception {
         return new ResponseEntity<>(studentService.saveOrUpdateStudent(saveStudentRequest), HttpStatus.OK);
     }
     @GetMapping("/getById")
@@ -38,12 +38,14 @@ public class StudentController {
     @RequestMapping(value = "/getAllStudent",method = RequestMethod.GET)
     private ResponseEntity<?> getAllStudent(@RequestParam(defaultValue ="0",required = false) Integer pageNo,
                                             @RequestParam(defaultValue="30",required = false) Integer pageSize,
-                                            @RequestParam(required = false) String studentName,
+                                           /* @RequestParam(required = false) String studentName,
                                             @RequestParam(required = false)String studentEmail,
-                                            @RequestParam(required = false)String studentMobileNo){
+                                            @RequestParam(required = false)String studentMobileNo,*/
+                                            @RequestParam(required = false)String startDate,
+                                            @RequestParam(required = false)String endDate){
         try{
             Pageable pageable= PageRequest.of(pageNo,pageSize);
-        return new ResponseEntity<>(new EntityResponse(studentService.getAllByDeleted(studentName,studentEmail,studentMobileNo,pageable),0),HttpStatus.OK);
+        return new ResponseEntity<>(new EntityResponse(studentService.getAllByDeleted(startDate,endDate,pageable),0),HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(new EntityResponse(e.getMessage(),-1),HttpStatus.OK);
         }
